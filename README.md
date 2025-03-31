@@ -17,7 +17,7 @@ It leverages four existing G2P tools (two statistical tools and two pronunciatio
 The simplest way is using pip:
 
 ```
-pip install g2p_plus
+pip install g2p-plus
 ```
 
 Or you can install from source:
