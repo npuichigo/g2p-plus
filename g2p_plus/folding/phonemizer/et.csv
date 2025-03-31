@@ -1,0 +1,33 @@
+phon_phonemizer,phon_ipa
+s^,sʲ
+t^,tʲ
+d^,dʲ
+sʲ sʲ,sʲː
+tʲ tʲ,tʲː
+dʲ dʲ,dʲː
+s s,sː
+t t,tː
+d d,dː
+l l,lː
+m m,mː
+h h,h
+ʃ ʃ,ʃː
+n n,nː
+f f,fː
+r r,rː
+k k,kː
+ɵ ɵː,ɤː
+ɵ,ɤ
+y yː,yː
+i iː,iː
+e eː,eː
+u uː,uː
+a aː,aː
+ø øː,øː
+o oː,oː
+øi j,øɪ̯
+øi,øɪ̯
+æiː,æi
+æ i,æi
+yi j,yː
+ʎ ,l 

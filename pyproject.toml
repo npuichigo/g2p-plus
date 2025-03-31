@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "g2p_plus"
+authors = [
+  { name="Zebulon Goriely", email="zebulon.goriely@cl.cam.ac.uk" },
+]
+description = "G2P library for multiple language"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",        
+    "Programming Language :: Python :: 3",
+]
+license = { file = "LICENSE"}
+keywords = ["G2P", "phonology", "phonetics", "linguistics", "phone"]
+dependencies = [
+    "childespy>=1.0.0",
+    "epitran>=1.25.1",
+    "phonemizer>=3.2.1",
+    "pinyin-to-ipa>=0.0.2",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/codebyzeb/g2p-plus"
+Issues = "https://github.com/codebyzeb/g2p-plus/issues"
+
+[project.scripts]
+g2p_plus = "g2p_plus.main:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "g2p_plus.__version__"}
+
+[tool.setuptools.package-data]
+g2p_plus = [
+    "data/*",
+    "folding/epitran/*",
+    "folding/phonemizer/*",
+    "folding/pinyin_to_ipa/*",
+    "folding/pingyam/*"]
