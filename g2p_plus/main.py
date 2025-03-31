@@ -1,33 +1,55 @@
+"""Command-line interface and core functions for G2P+ (Grapheme-to-Phoneme Plus).
+
+This module provides the main functionality for converting text (graphemes) to 
+phonetic transcriptions using various G2P backends. It includes:
+
+- phonemize_utterances(): Core function for converting text to phonemes
+- character_split_utterances(): Utility for character-level text splitting
+- Command-line interface for easy text-to-phoneme conversion
+
+The module supports multiple G2P backends (e.g., Epitran, Phonemizer) and languages,
+with configurable options for word boundaries and phoneme set normalization.
+
+Example Usage:
+    >>> from g2p_plus.main import phonemize_utterances
+    >>> text = ['hello there!']
+    >>> phonemes = phonemize_utterances(text, 'phonemizer', 'en-us', True)
+    >>> print(phonemes[0])
+    'h ə l oʊ WORD_BOUNDARY ð ɛ ɹ WORD_BOUNDARY'
+"""
+
+import argparse
+import sys
 
 from g2p_plus.wrappers import WRAPPER_BACKENDS
 
 def phonemize_utterances(lines, backend, language, keep_word_boundaries, verbose=False, use_folding=True, **wrapper_kwargs):
-    """ Phonemizes lines using a specified wrapper and language.
+    """ Phonemizes text lines into phonetic transcriptions using a specified backend.
 
     Args:
-        lines (list of str): The lines to phonemize.
-        backend (str): The backend to use for phonemization.
-        language (str): The language to phonemize.
-        keep_word_boundaries (bool): Whether to keep word boundaries.
-        verbose (bool): Whether to print debug information.
-        use_folding (bool): Whether to use folding dictionaries to correct the wrapper's output.
-        **wrapper_kwargs: Additional keyword arguments.
+        lines (list of str): Lines of text to convert to phonemes.
+        backend (str): The G2P backend to use (e.g. 'epitran', 'espeak').
+        language (str): Language code for phonemization (format depends on backend).
+        keep_word_boundaries (bool): If True, inserts 'WORD_BOUNDARY' between words.
+        verbose (bool, optional): Print debug information. Defaults to False.
+        use_folding (bool, optional): Apply folding dictionaries to normalize phoneme sets. Defaults to True.
+        **wrapper_kwargs: Additional backend-specific arguments.
     
     Returns:
-        list of str: The phonemized lines.
+        list of str: Phonemized lines, where each line contains space-separated IPA phonemes.
+            Words are separated by 'WORD_BOUNDARY' if keep_word_boundaries=True.
+            Lines that fail to phonemize are returned as empty strings.
 
     Raises:
-        ValueError: If the backend is not supported.
-        ValueError: If the language is not supported by the backend.
-        ValueError: If an argument is not supported by the wrapper.
-        ValueError: If an argument is not the correct type.
+        ValueError: If backend is not supported
+        ValueError: If language is not supported by the backend
+        ValueError: If wrapper_kwargs contains invalid arguments
+        ValueError: If arguments have incorrect types
 
-    The returned list will be the same length as `lines`. Each line will be a string of space-separated IPA phonemes,
-    with 'WORD_BOUNDARY' separating words if keep_word_boundaries=True. Lines that could not be phonemized are returned as empty strings.
-
-    E.g:
-    Input: ['hello there!', 'this is a test.']
-    Output: ['h ə l oʊ WORD_BOUNDARY ð ɛ ɹ WORD_BOUNDARY', 'ð ɪ s WORD_BOUNDARY ɪ z WORD_BOUNDARY ə WORD_BOUNDARY t ɛ s t WORD_BOUNDARY']
+    Examples:
+        >>> lines = ['hello there!']
+        >>> phonemize_utterances(lines, 'phonemizer', 'en-us', True)
+        ['h ə l oʊ WORD_BOUNDARY ð ɛ ɹ WORD_BOUNDARY']
     """
 
     if backend not in WRAPPER_BACKENDS:
@@ -36,19 +58,45 @@ def phonemize_utterances(lines, backend, language, keep_word_boundaries, verbose
     return wrapper.process(lines)
 
 def character_split_utterances(lines):
-    """ Used to split a line of orthographic text into characters separated by spaces.
-    The resulting representation is similar to what is produced by phonemize_utterance, facilitating comparison.
+    """ Splits text lines into space-separated characters with word boundaries.
 
-    E.g:
-    Input: ['hello there!', 'this is a test.']
-    Output: ['h e l l o  WORD_BOUNDARY t h e r e WORD_BOUNDARY !', 't h i s  WORD_BOUNDARY i s  WORD_BOUNDARY a  WORD_BOUNDARY t e s t  WORD_BOUNDARY .']
+    This function provides a character-level representation that mirrors the format
+    of phonemized output, making it useful for alignment and comparison tasks.
 
+    Args:
+        lines (list of str): Lines of text to split into characters.
+
+    Returns:
+        list of str: Lines split into space-separated characters with 'WORD_BOUNDARY'
+            markers between words and at the end of each line.
+
+    Examples:
+        >>> lines = ['hello there!']
+        >>> character_split_utterances(lines)
+        ['h e l l o WORD_BOUNDARY t h e r e ! WORD_BOUNDARY']
     """
     return [' '.join(['WORD_BOUNDARY' if c == ' ' else c for c in list(line.strip())]) + ' WORD_BOUNDARY' for line in lines]
 
 def main():
-    import argparse
-    import sys
+    """ Command-line interface for text-to-phoneme conversion.
+    
+    Reads text from stdin or a file, converts it to phonemes using the specified
+    backend and language, and writes the results to stdout or a file.
+
+    Command-line Arguments:
+        backend: The G2P backend to use
+        language: Language code for phonemization
+        -k/--keep-word-boundaries: Keep word boundary markers
+        -v/--verbose: Print debug information
+        -u/--uncorrected: Skip phoneme set normalization (folding dictionaries)
+        -i/--input-file: Input file (default: stdin)
+        -o/--output-file: Output file (default: stdout)
+        Additional backend-specific arguments can be passed as --key=value
+
+    Example Usage:
+        python -m g2p_plus.main epitran spa-Latn -k -v < input.txt > output.txt
+        python -m g2p_plus.main phonemizer en-us -i text.txt -o phonemes.txt
+    """
 
     class CustomHelpFormatter(argparse.HelpFormatter):
         def __init__(self, prog):

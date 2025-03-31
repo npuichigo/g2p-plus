@@ -1,4 +1,10 @@
-""" Wrapper for pingyam library for converting Cantonese  to IPA. """
+""" 
+Wrapper for the pingyam library for converting Cantonese Jyutping to IPA phonemes.
+
+This wrapper utilizes the pingyam library to convert Cantonese text written in 
+Jyutping romanization into International Phonetic Alphabet (IPA) notation. 
+It specifically supports Cantonese language phonetic transcription.
+"""
 
 import os
 import pandas as pd
@@ -9,17 +15,45 @@ from g2p_plus.wrappers.wrapper import Wrapper
 PINGYAM_PATH = os.path.join(os.path.dirname(__file__), '../data/pingyam/pingyambiu')
 
 class PingyamWrapper(Wrapper):
+    """
+    A wrapper class for converting Cantonese Jyutping to IPA using the pingyam library.
+
+    Class Attributes:
+        SUPPORTED_LANGUAGES (list): Contains only 'cantonese' as this wrapper is
+            specifically for Cantonese language.
+    """
 
     SUPPORTED_LANGUAGES = ['cantonese']
 
     @staticmethod
     def supported_languages_message():
+        """
+        Returns a message indicating the supported language for this wrapper.
+
+        Returns:
+            str: Message indicating this wrapper only supports Cantonese.
+        """
         message = 'The PingyamWrapper uses the pingyam library, which only supports `cantonese`.\n'
         return message
     
     def _phonemize(self, lines):
-        """ Uses pingyam library to convert Cantonese from jyutping to IPA. """
+        """ 
+        Converts Cantonese text from Jyutping to IPA phonemes using the pingyam library.
 
+        This method processes each line of Jyutping text, converting it to IPA phonemes.
+        It handles both empty lines and lines with unrecognized syllables.
+
+        Args:
+            lines (list[str]): List of Jyutping text strings to convert.
+
+        Returns:
+            list[str]: List of phonemized strings where each phoneme is separated by
+                        spaces. Failed conversions return empty strings.
+
+        Notes:
+            - The method tracks the number of lines that could not be converted and logs a warning.
+            - Word boundaries are added based on the `keep_word_boundaries` attribute.
+        """
         broken = 0
         phonemized_utterances = []
 
@@ -65,8 +99,17 @@ class PingyamWrapper(Wrapper):
         return phonemized_utterances
     
 def _move_tone_marker_to_after_vowel(syll):
-    """ Move the tone marker from the end of a cantonese syllable to directly after the vowel """
+    """ 
+    Moves the tone marker from the end of a Cantonese syllable to directly after the vowel.
 
+    This function ensures that the tone marker is correctly positioned for phonetic representation.
+
+    Args:
+        syll (str): A Cantonese syllable that may contain a tone marker.
+
+    Returns:
+        str: The syllable with the tone marker repositioned.
+    """
     cantonese_vowel_symbols = "eauɔiuːoɐɵyɛœĭŭiʊɪə"
     cantonese_tone_symbols = "˥˧˨˩"
     if not syll[-1] in cantonese_tone_symbols:

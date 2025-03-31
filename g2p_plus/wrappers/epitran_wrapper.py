@@ -38,7 +38,6 @@ class EpitranWrapper(Wrapper):
                     self.logger.error(f'CEDICT not found at {self.CEDICT}. Please download the CC_CEDICT file from https://www.mdbg.net/chinese/dictionary?page=cedict and place it in {os.path.dirname(self.CEDICT)}.')
                     return False
             elif language == 'eng-Latn':
-                # Try running lex_lookup on the system
                 try:
                     subprocess.run(['lex_lookup', 'hello'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 except subprocess.CalledProcessError:
@@ -48,7 +47,7 @@ class EpitranWrapper(Wrapper):
         return False
 
     def _phonemize(self, lines):
-        """ Uses epitram to phonemize text. Returns a list of phonemized lines. Lines that could not be phonemized are returned as empty strings."""
+        """ Uses epitran to phonemize text. Returns a list of phonemized lines. Lines that could not be phonemized are returned as empty strings."""
 
         self.logger.debug(f'Using epitram backend with language code "{self.language}"...')
         

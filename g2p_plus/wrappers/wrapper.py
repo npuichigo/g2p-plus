@@ -1,4 +1,10 @@
-""" Abstract base class for wrappers. """
+""" 
+Abstract base class for G2P (Grapheme-to-Phoneme) wrappers.
+
+This module provides a base class that all G2P wrappers must inherit from.
+Each wrapper implements a specific backend (like Epitran, Phonemizer, etc.) and
+must follow the interface defined here.
+"""
 
 from abc import ABC, abstractmethod
 import logging
@@ -7,6 +13,15 @@ import os
 FOLDING_DICTS_PATH = os.path.join(os.path.dirname(__file__), '../folding')
 
 class Wrapper(ABC):
+    """
+    Abstract base class that defines the interface for G2P wrappers.
+
+    Class Attributes:
+        SUPPORTED_LANGUAGES (list): List of language codes supported by this wrapper
+        WRAPPER_KWARGS_TYPES (dict): Maps kwarg names to their expected types
+        WRAPPER_KWARGS_DEFAULTS (dict): Maps kwargs to their default values
+        KWARGS_HELP (dict): Provides help text for each supported kwarg
+    """
 
     SUPPORTED_LANGUAGES = []
     WRAPPER_KWARGS_TYPES = {}
@@ -16,22 +31,29 @@ class Wrapper(ABC):
     @staticmethod
     @abstractmethod
     def supported_languages_message():
-        """ Returns a string with the supported languages for the wrapper. """
+        """ 
+        Returns information about languages supported by this wrapper.
+
+        Returns:
+            str: A formatted string describing the supported languages and any
+                relevant details about language support for this wrapper.
+        """
         pass
 
     def __init__(self, language, keep_word_boundaries=True, verbose=False, use_folding=True, **wrapper_kwargs):
         """ 
-        Initializes the wrapper with the given language and wrapper_kwargs.
+        Initializes a new G2P wrapper instance.
         
         Args:
-            language (str): The language to phonemize.
-            keep_word_boundaries (bool): Whether to keep word boundaries.
-            verbose (bool): Whether to print debug information.
-            use_folding (bool): Whether to use folding dictionaries to correct the wrapper's output.
-            **wrapper_kwargs: Additional keyword arguments.
+            language (str): The language code for phonemization (e.g. 'en', 'fr')
+            keep_word_boundaries (bool): If True, marks word boundaries in output
+            verbose (bool): If True, enables detailed logging output
+            use_folding (bool): If True, applies post-processing rules from folding dictionaries
+            **wrapper_kwargs: Additional backend-specific configuration options
         
         Raises:
-            ValueError: If the language is not supported by the wrapper or if an argument is not supported.
+            ValueError: If language is not supported or if wrapper_kwargs contains
+                      invalid arguments or types
         """
 
         self.language = language
@@ -65,7 +87,17 @@ class Wrapper(ABC):
 
 
     def process(self, lines):
-        """ Processes a list of lines by first converting with G2P then possibly applying a folding dictionary."""
+        """ 
+        Converts text to phonemes using the configured G2P backend.
+
+        Args:
+            lines (list[str]): List of text strings to convert to phonemes
+
+        Returns:
+            list[str]: The phonemized versions of the input lines, with each phoneme
+                      separated by spaces. Empty strings indicate lines that could not
+                      be processed.
+        """
 
         phonemized_lines = self._phonemize(lines)
         for i, line in enumerate(phonemized_lines):
@@ -75,10 +107,14 @@ class Wrapper(ABC):
         return phonemized_lines
 
     def check_language_support(self, language):
-        """ Checks if the language is supported by the wrapper. 
+        """ 
+        Checks if a language is supported by this wrapper.
         
+        Args:
+            language (str): Language code to check
+
         Returns:
-            bool: True if the language is supported, False otherwise.
+            bool: True if the language is supported, False otherwise
         """
 
         if language in self.SUPPORTED_LANGUAGES:
@@ -86,28 +122,48 @@ class Wrapper(ABC):
         return False
 
     def get_supported_languages(self):
-        """ Returns a list of supported languages by the wrapper. """
+        """ 
+        Gets the list of languages supported by this wrapper.
+
+        Returns:
+            list[str]: List of supported language codes
+        """
         return self.SUPPORTED_LANGUAGES
 
     @abstractmethod
     def _phonemize(self, lines):
-        """ Uses a G2P backend to phonemize text. Returns a list of phonemized lines.
-        Lines that could not be phonemized should be returned as empty strings ('').
+        """ 
+        Core phonemization method that must be implemented by each wrapper.
         
-        All wrappers should output IPA phonemes separated by spaces. If keep_word_boundaries is True, they should also output 'WORD_BOUNDARY' at the end of each word:
+        Args:
+            lines (list[str]): List of text strings to convert to phonemes
+            
+        Returns:
+            list[str]: Phonemized versions of the input lines. Each phoneme should be
+                      separated by spaces. If keep_word_boundaries is True, 'WORD_BOUNDARY'
+                      should be inserted between words.
 
-        Example 1 (keep_word_boundaries=True):
-        Input: 'hello there!'
-        Output: 'h ə l oʊ WORD_BOUNDARY ð ɛ ɹ WORD_BOUNDARY'
+        Examples:
+            With keep_word_boundaries=True:
+                Input: 'hello there!'
+                Output: 'h ə l oʊ WORD_BOUNDARY ð ɛ ɹ WORD_BOUNDARY'
 
-        Example 2 (keep_word_boundaries=False):
-        Input: 'hello there!'
-        Output: 'h ə l oʊ ð ɛ ɹ'
+            With keep_word_boundaries=False:
+                Input: 'hello there!'
+                Output: 'h ə l oʊ ð ɛ ɹ'
         """
         pass
 
     def _post_process_line(self, line):
-        """ Post-processes a phonemized line by applying folding dictionaries and stripping """
+        """ 
+        Applies folding dictionary rules to a phonemized line.
+
+        Args:
+            line (str): A phonemized line to post-process
+
+        Returns:
+            str: The post-processed line with folding rules applied
+        """
         for dict in self.folding_dicts:
             line = ' ' + line + ' ' # For matching items that are at the beginning or end of the line
             for key, value in dict.items():
@@ -116,6 +172,17 @@ class Wrapper(ABC):
         return line
 
     def _get_folding_dictionaries(self):
+        """
+        Loads folding dictionaries for post-processing phonemized output.
+
+        The method loads two types of dictionaries if they exist:
+        1. A main dictionary for the backend (backend_name.csv)
+        2. A language-specific dictionary (language_code.csv)
+
+        Returns:
+            list[dict]: List of loaded folding dictionaries, where each dictionary
+                       maps patterns to their replacements
+        """
         if not self.use_folding:
             self.logger.debug(f"Skipping folding dictionary post-processing, using uncorrected output from {self.backend_name}.")
             return []

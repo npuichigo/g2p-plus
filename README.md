@@ -42,6 +42,10 @@ The `epitran` backend with English requires Flite to be installed. See instructi
 
 ## Usage
 
+G2P+ is available as a command-line tool or as a python function. 
+
+### Command-line interface
+
 `g2p_plus` is the CLI for G2P+, supporting the conversion of corpora to a unified IPA format. It supports multiple backends, as described above. The help menu (`-h`) describes usage and the languages supported by each backend. The script reads lines from an input file (using `-i`) and saves space-separated IPA phonemes to an output file (using `-o`) or reads/writes to/from STDIN/STDOUT if files are not provided. Word boundaries are provided between words using `-k` using a `WORD_BOUNDARY` token.
 
 For many languages, the underlying transcription tool does not output phoneme sets that match typical phoneme inventories for that language. As such, we have implemented "folding" dictionaries for many languages. These map the output of a backend for a language to a standard phoneme inventory in [Phoible](https://phoible.org/). See `g2p_plus/folding` for these dictionaries. This "folding" can be turned off using `-u`. 
@@ -56,7 +60,16 @@ h ə l əʊ WORD_BOUNDARY ð eə WORD_BOUNDARY
 > g2p_plus phonemizer en-us
 hello there!
 h ə l oʊ ð ɛ ɹ
+```
 
+### Python library
+
+G2P+ can be imported in python and used as follows:
+
+```
+from g2p_plus import phonemize_utterances
+lines = ['hello there!', 'nice to meet you.']
+phonemized = phonemize_utterances(lines, "phonemizer", "en-gb", keep_word_boundaries=True)
 ```
 
 ## Attribution
