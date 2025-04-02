@@ -19,7 +19,6 @@ classifiers = [
 license = { file = "LICENSE"}
 keywords = ["G2P", "phonology", "phonetics", "linguistics", "phone"]
 dependencies = [
-    "childespy>=1.0.0",
     "epitran>=1.25.1",
     "phonemizer>=3.2.1",
     "pinyin-to-ipa>=0.0.2",
