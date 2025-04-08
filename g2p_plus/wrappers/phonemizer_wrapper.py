@@ -67,7 +67,7 @@ class PhonemizerWrapper(Wrapper):
         message += 'For a list of supported languages, run `espeak-ng --voices` or see https://github.com/espeak-ng/espeak-ng/blob/master/docs/languages.md\n'
         return message
 
-    def __init__(self, language, keep_word_boundaries=True, verbose=False, use_folding=True, **wrapper_kwargs):
+    def __init__(self, language, keep_word_boundaries=True, verbose=False, uncorrected=False, **wrapper_kwargs):
         """
         Initializes the wrapper with phonemizer-specific configurations.
 
@@ -76,7 +76,7 @@ class PhonemizerWrapper(Wrapper):
         - Word boundary mismatch handling
         - Multi-processing settings
         """
-        super().__init__(language, keep_word_boundaries, verbose, use_folding, **wrapper_kwargs)
+        super().__init__(language, keep_word_boundaries, verbose, uncorrected, **wrapper_kwargs)
         self.separator = Separator(phone='PHONE_BOUNDARY', word=' ', syllable='')
         self.strip = True
         self.language_switch = 'remove-utterance'

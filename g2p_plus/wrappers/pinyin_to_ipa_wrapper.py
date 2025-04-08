@@ -11,6 +11,8 @@ import re
 from pinyin_to_ipa import pinyin_to_ipa
 from g2p_plus.wrappers.wrapper import Wrapper
 
+MANDARIN_TONES = ['˧', '˥']
+
 class Pinyin_To_IpaWrapper(Wrapper):
     """
     Wrapper for converting Mandarin pinyin to IPA phonemes.
@@ -25,6 +27,18 @@ class Pinyin_To_IpaWrapper(Wrapper):
     """
 
     SUPPORTED_LANGUAGES = ['mandarin']
+
+    WRAPPER_KWARGS_TYPES = {
+        'split_tones': bool,
+    }
+
+    WRAPPER_KWARGS_DEFAULTS = {
+        'split_tones': False,
+    }
+
+    KWARGS_HELP = {
+        'split_tones': 'If True, tones are output as separate phonemes. If False, tones are attached to the vowel.',
+    }
 
     @staticmethod
     def supported_languages_message():
@@ -80,6 +94,12 @@ class Pinyin_To_IpaWrapper(Wrapper):
                     for syllable in syllables:
                         syll_set = pinyin_to_ipa(syllable)
                         syll = ' '.join(syll_set[0])
+                        # Handle tone splitting (add a space before the first tone symbol found)
+                        if self.split_tones:
+                            for i in range(len(syll)):
+                                if syll[i] in MANDARIN_TONES:
+                                    syll = syll[:i] + ' ' + syll[i:]
+                                    break
                         transcribed += syll + ' '
                     
                     if self.keep_word_boundaries:

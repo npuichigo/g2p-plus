@@ -73,6 +73,20 @@ lines = ['hello there!', 'nice to meet you.']
 phonemized = phonemize_utterances(lines, "phonemizer", "en-gb", keep_word_boundaries=True)
 ```
 
+### Additional arguments
+
+There are a couple arguments shared by all wrappers and a few wrapper-specific arguments. The arguments shared by all wrappers are:
+- `--keep-word-boundaries`: If set to True, outputs a dedicated `WORD_BOUNDARY` token between words.
+- `--uncorrected`: If set to True, does not apply the folding maps.
+
+The wrapper specific arguments are as follows:
+
+- `--allow_possibly_faulty_word_boundaries` (for `phonemizer`): Allows possibly faulty word boundaries, otherwise removes lines with altered word counts after transcription.
+- `--preserve_punctuation` (for `phonemizer`): Preserves punctuation in the transcribed output.
+- `--with_stress` (for `phonemizer`): Includes stress markers in the transcribed output.
+- `--split_tones` (for `pingyam` and `pinyin-to-ipa`): Separates tones as separate phonemes instead of attaching them to the vowel.
+
+
 ## Attribution
 
 This project incorporates content from the following sources:

@@ -14,6 +14,8 @@ from g2p_plus.wrappers.wrapper import Wrapper
 
 PINGYAM_PATH = os.path.join(os.path.dirname(__file__), '../data/pingyam/pingyambiu')
 
+CANTONESE_VOWELS = "eauɔiuːoɐɵyɛœĭŭiʊɪə"
+CANTONESE_TONES = "˥˧˨˩"
 class PingyamWrapper(Wrapper):
     """
     A wrapper class for converting Cantonese Jyutping to IPA using the pingyam library.
@@ -22,6 +24,18 @@ class PingyamWrapper(Wrapper):
         SUPPORTED_LANGUAGES (list): Contains only 'cantonese' as this wrapper is
             specifically for Cantonese language.
     """
+
+    WRAPPER_KWARGS_TYPES = {
+        'split_tones': bool,
+    }
+
+    WRAPPER_KWARGS_DEFAULTS = {
+        'split_tones': False,
+    }
+
+    KWARGS_HELP = {
+        'split_tones': 'If True, tones are output as separate phonemes. If False, tones are attached to the vowel.',
+    }
 
     SUPPORTED_LANGUAGES = ['cantonese']
 
@@ -90,10 +104,12 @@ class PingyamWrapper(Wrapper):
             self.logger.debug(f'WARNING: {broken} lines were not transcribed successfully by jyutping to ipa conversion.')
         
         # Separate phonemes with spaces and add word boundaries
-        # The spaces between multi-character phonemes are fixed by the folding dictionary, which
-        # also attaches tone markers to the vowels
+        # The spaces between multi-character phonemes are fixed by the folding dictionary.
         for i in range(len(transcribed_utterances)):
             transcribed_utterances[i] = ' '.join(list(transcribed_utterances[i]))
+            # Connect tones to the vowel if split_tones is False
+            if not self.split_tones:
+                transcribed_utterances[i] = re.sub(r'(\s+)([' + CANTONESE_TONES + '])', r'\2', transcribed_utterances[i])
             transcribed_utterances[i] = transcribed_utterances[i].replace('_', 'WORD_BOUNDARY' if self.keep_word_boundaries else ' ')
 
         return transcribed_utterances
@@ -110,17 +126,14 @@ def _move_tone_marker_to_after_vowel(syll):
     Returns:
         str: The syllable with the tone marker repositioned.
     """
-    cantonese_vowel_symbols = "eauɔiuːoɐɵyɛœĭŭiʊɪə"
-    cantonese_tone_symbols = "˥˧˨˩"
-    if not syll[-1] in cantonese_tone_symbols:
-        print(syll, syll[-1])
+    if not syll[-1] in CANTONESE_TONES:
         return syll
     tone_marker = len(syll) - 1
-    # Iterate backwards
     for i in range(len(syll)-2, -1, -1):
-        if syll[i] in cantonese_tone_symbols:
+        if syll[i] in CANTONESE_TONES:
             tone_marker = i
             continue
-        if syll[i] in cantonese_vowel_symbols:
-            return syll[:i+1] + syll[tone_marker:] + syll[i+1:tone_marker]
+        if syll[i] in CANTONESE_VOWELS:
+            tone_seq = syll[tone_marker:]
+            return syll[:i+1] + tone_seq + syll[i+1:tone_marker]
     return syll

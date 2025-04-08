@@ -51,7 +51,7 @@ class EpitranWrapper(Wrapper):
         message += 'For a list of supported languages, see https://github.com/dmort27/epitran#language-support\n'
         return message
 
-    def __init__(self, language, keep_word_boundaries=True, verbose=False, use_folding=True, **wrapper_kwargs):
+    def __init__(self, language, keep_word_boundaries=True, verbose=False, uncorrected=False, **wrapper_kwargs):
         """
         Initializes the EpitranWrapper with the specified language and options.
 
@@ -59,10 +59,10 @@ class EpitranWrapper(Wrapper):
             language (str): The language code for transcription.
             keep_word_boundaries (bool): If True, keeps word boundaries in the output.
             verbose (bool): If True, enables verbose logging.
-            use_folding (bool): If True, applies folding to the phoneme output.
+            uncorrected (bool): If True, does not apply folding to the phoneme output.
             **wrapper_kwargs: Additional keyword arguments for customization.
         """
-        super().__init__(language, keep_word_boundaries, verbose, use_folding, **wrapper_kwargs)
+        super().__init__(language, keep_word_boundaries, verbose, uncorrected, **wrapper_kwargs)
         self.norm_punc = False
         self.ligatures = False
         self.epi = Epitran(self.language, tones=True, cedict_file=self.CEDICT, ligatures=self.ligatures)

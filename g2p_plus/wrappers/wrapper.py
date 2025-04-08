@@ -40,7 +40,7 @@ class Wrapper(ABC):
         """
         pass
 
-    def __init__(self, language, keep_word_boundaries=True, verbose=False, use_folding=True, **wrapper_kwargs):
+    def __init__(self, language, keep_word_boundaries=True, verbose=False, uncorrected=False, **wrapper_kwargs):
         """ 
         Initializes a new G2P wrapper instance.
         
@@ -48,7 +48,7 @@ class Wrapper(ABC):
             language (str): The language code for transcription (e.g. 'en', 'fr')
             keep_word_boundaries (bool): If True, marks word boundaries in output
             verbose (bool): If True, enables detailed logging output
-            use_folding (bool): If True, applies post-processing rules from folding dictionaries
+            uncorrected (bool): If True, does not apply post-processing rules from folding dictionaries
             **wrapper_kwargs: Additional backend-specific configuration options
         
         Raises:
@@ -58,7 +58,7 @@ class Wrapper(ABC):
 
         self.language = language
         self.keep_word_boundaries = keep_word_boundaries
-        self.use_folding = use_folding
+        self.uncorrected = uncorrected
         self.verbose = verbose
         self.backend_name = self.__class__.__name__.replace('Wrapper', '').lower()
 
@@ -183,7 +183,7 @@ class Wrapper(ABC):
             list[dict]: List of loaded folding dictionaries, where each dictionary
                        maps patterns to their replacements
         """
-        if not self.use_folding:
+        if self.uncorrected:
             self.logger.debug(f"Skipping folding dictionary post-processing, using uncorrected output from {self.backend_name}.")
             return []
         

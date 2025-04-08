@@ -23,7 +23,7 @@ import sys
 
 from g2p_plus.wrappers import WRAPPER_BACKENDS
 
-def transcribe_utterances(lines, backend, language, keep_word_boundaries, verbose=False, use_folding=True, **wrapper_kwargs):
+def transcribe_utterances(lines, backend, language, keep_word_boundaries, verbose=False, uncorrected=False, **wrapper_kwargs):
     """ Transcribes text lines into phonetic transcriptions using a specified backend.
 
     Args:
@@ -32,7 +32,7 @@ def transcribe_utterances(lines, backend, language, keep_word_boundaries, verbos
         language (str): Language code for transcription (format depends on backend).
         keep_word_boundaries (bool): If True, inserts 'WORD_BOUNDARY' between words.
         verbose (bool, optional): Print debug information. Defaults to False.
-        use_folding (bool, optional): Apply folding dictionaries to normalize phoneme sets. Defaults to True.
+        uncorrected (bool, optional): Don't folding dictionaries to normalize phoneme sets. Defaults to False.
         **wrapper_kwargs: Additional backend-specific arguments.
     
     Returns:
@@ -54,7 +54,7 @@ def transcribe_utterances(lines, backend, language, keep_word_boundaries, verbos
 
     if backend not in WRAPPER_BACKENDS:
         raise ValueError(f'Backend "{backend}" not supported. Supported backends: {list(WRAPPER_BACKENDS.keys())}')
-    wrapper = WRAPPER_BACKENDS[backend](language=language, keep_word_boundaries=keep_word_boundaries, verbose=verbose, use_folding=use_folding, **wrapper_kwargs)
+    wrapper = WRAPPER_BACKENDS[backend](language=language, keep_word_boundaries=keep_word_boundaries, verbose=verbose, uncorrected=uncorrected, **wrapper_kwargs)
     return wrapper.process(lines)
 
 def character_split_utterances(lines):
@@ -123,7 +123,7 @@ def main():
     parser.add_argument("language", help="The language code to use for G2P conversion (specific to the backend).")
     parser.add_argument("-k", "--keep-word-boundaries", action="store_true", help="Keep word boundaries in the output.")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print debug information.")
-    parser.add_argument("-u", "--uncorrected", action="store_false", help="Use the wrapper's output without applying a folding dictionary to correct the phoneme sets.")
+    parser.add_argument("-u", "--uncorrected", action="store_true", help="Use the wrapper's output without applying a folding dictionary to correct the phoneme sets.")
     parser.add_argument("-i", "--input-file", type=argparse.FileType('r'), default=sys.stdin, help="Input file containing utterances (one per line). If not specified, reads from stdin.")
     parser.add_argument("-o", "--output-file", type=argparse.FileType('w'), default=sys.stdout, help="Output file for transcribed utterances. If not specified, writes to stdout.")
     
@@ -139,11 +139,19 @@ def main():
                 print(f"Error: Argument '{arg}' must be in the form '--key=value'.", file=sys.stderr)
                 sys.exit(1)
             if key in WRAPPER_BACKENDS[args.backend].WRAPPER_KWARGS_TYPES:
-                try:
-                    wrapper_kwargs[key] = WRAPPER_BACKENDS[args.backend].WRAPPER_KWARGS_TYPES[key](value)
-                except ValueError:
-                    print(f"Error: Argument '{key}' must be of type {WRAPPER_BACKENDS[args.backend].WRAPPER_KWARGS_TYPES[key].__name__}. Got '{value}' instead.", file=sys.stderr)
-                    sys.exit(1)
+                value = value.lower() if isinstance(value, str) else value  # Convert to lowercase if it's a string
+                if WRAPPER_BACKENDS[args.backend].WRAPPER_KWARGS_TYPES[key] == bool:
+                    value = value == 'true'  # Convert "true" to True and "false" to False
+                wrapper_kwargs[key] = WRAPPER_BACKENDS[args.backend].WRAPPER_KWARGS_TYPES[key](value)
+    
+    # Print out the wrapper_kwargs for debugging
+    if args.verbose:
+        for key, value in wrapper_kwargs.items():
+            if key in WRAPPER_BACKENDS[args.backend].WRAPPER_KWARGS_TYPES:
+                print(f"Wrapper argument: {key} = {value}")
+            else:
+                print(f"Warning: Argument '{key}' is not recognized by the backend '{args.backend}'.", file=sys.stderr)
+                sys.exit(1)
 
     lines = args.input_file.readlines()
     lines = [line.strip() for line in lines]
