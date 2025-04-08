@@ -1,6 +1,7 @@
 # G2P+
 
-This repository contains scripts for converting various corpora to a unified IPA format, with marked word and utterance boundaries, to prepare them for [training and evaluating small transformer-based language models](https://github.com/codebyzeb/PhonemeTransformers).
+This repository contains scripts for converting various corpora to a unified IPA format, with marked word and utterance boundaries, to prepare them for [training and evaluating small transformer-based language models](https://github.com/codebyzeb/PhonemeTransformers). Read our paper [here](
+https://arxiv.org/abs/2504.03036).
 
 It leverages four existing G2P tools (two statistical tools and two pronunciation dictionaries) to support a wide variety of languages:
 
@@ -88,3 +89,19 @@ In accordance with the **CC BY-SA 3.0** license, any derivative work or adaptati
 ## License
 
 All original content in this repository created by **Zébulon Goriely** is licensed under the [MIT License](https://github.com/codebyzeb/g2p-plus/blob/main/LICENSE). 
+
+## Citing
+
+To cite G2P+:
+
+```
+@misc{goriely2025ipachildesg2pfeaturerich,
+      title={IPA-CHILDES & G2P+: Feature-Rich Resources for Cross-Lingual Phonology and Phonemic Language Modeling}, 
+      author={Zébulon Goriely and Paula Buttery},
+      year={2025},
+      eprint={2504.03036},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2504.03036}, 
+}
+```
