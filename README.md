@@ -73,9 +73,9 @@ h ə l oʊ ð ɛ ɹ
 G2P+ can be imported in python and used as follows:
 
 ```
-from g2p_plus import phonemize_utterances
+from g2p_plus import transcribe_utterances
 lines = ['hello there!', 'nice to meet you.']
-phonemized = phonemize_utterances(lines, "phonemizer", "en-gb", keep_word_boundaries=True)
+phonemized = transcribe_utterances(lines, "phonemizer", "en-gb", keep_word_boundaries=True)
 ```
 
 ### Additional arguments
