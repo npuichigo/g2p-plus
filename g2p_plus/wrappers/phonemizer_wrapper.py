@@ -100,8 +100,6 @@ class PhonemizerWrapper(Wrapper):
         """
         if language == 'ja':
             return True
-        if os.getenv('PHONEMIZER_ESPEAK_LIBRARY') is None:
-            raise ValueError('PHONEMIZER_ESPEAK_LIBRARY is not set. Please set it to the path of the espeak-ng library. See README.md for more information: https://github.com/codebyzeb/g2p-plus/blob/main/README.md')
         if language in self.get_supported_languages():
             return True
         return False
