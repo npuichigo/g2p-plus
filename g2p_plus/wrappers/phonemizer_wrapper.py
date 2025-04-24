@@ -13,13 +13,38 @@ import logging
 import os
 import re
 import subprocess
+from functools import lru_cache
 from phonemizer import phonemize
 from phonemizer.separator import Separator
+from phonemizer.backend import EspeakBackend, SegmentsBackend
 
 from g2p_plus.wrappers.wrapper import Wrapper
 
 SECONDARY_STRESS = 'ˈ'  # Secondary stress marker used by espeak-ng
 PRIMARY_STRESS = "'"    # Primary stress marker used by espeak-ng
+
+@lru_cache(maxsize=8)
+def get_espeak_backend(language, preserve_punctuation, with_stress, words_mismatch):
+    """Creates and caches an EspeakBackend instance.
+        
+    Returns:
+        EspeakBackend: Configured backend instance
+    """
+    return EspeakBackend(
+        language, 
+        preserve_punctuation=preserve_punctuation,
+        with_stress=with_stress,
+        language_switch='remove-utterance',
+        words_mismatch=words_mismatch)
+
+@lru_cache(maxsize=1)
+def get_segments_backend(preserve_punctuation):
+    """Creates and caches a SegmentsBackend instance.
+        
+    Returns:
+        SegmentsBackend: Configured backend instance
+    """
+    return SegmentsBackend('japanese', preserve_punctuation=preserve_punctuation)
 
 class PhonemizerWrapper(Wrapper):
     """
@@ -79,7 +104,6 @@ class PhonemizerWrapper(Wrapper):
         super().__init__(language, keep_word_boundaries, verbose, uncorrected, **wrapper_kwargs)
         self.separator = Separator(phone='PHONE_BOUNDARY', word=' ', syllable='')
         self.strip = True
-        self.language_switch = 'remove-utterance'
 
         # Configure word boundary mismatch handling
         self.words_mismatch = 'ignore' if self.allow_possibly_faulty_word_boundaries or not self.keep_word_boundaries else 'remove'
@@ -150,17 +174,15 @@ class PhonemizerWrapper(Wrapper):
             list[str]: Transcribed Japanese text
         """
         self.logger.debug('Using the segments backend to transcribe Japanese text.')
+        backend = get_segments_backend(self.preserve_punctuation)
         phn = []
         missed_lines = 0
         for line in lines:
             try:
-                phn.append(phonemize(
-                    line,
-                    language='japanese',
-                    backend='segments',
+                phn.append(backend.phonemize(
+                    [line],
                     separator=self.separator,
-                    strip=self.strip,
-                    preserve_punctuation=self.preserve_punctuation)) 
+                    strip=self.strip)[0])
             except ValueError:
                 missed_lines += 1
                 phn.append('')
@@ -181,17 +203,16 @@ class PhonemizerWrapper(Wrapper):
         """
         self.logger.debug(f'Using espeak backend with language code "{self.language}"...')
         logging.disable(logging.WARNING)
-        phn = phonemize(
+        backend = get_espeak_backend(self.language,
+                                     self.preserve_punctuation,
+                                     self.with_stress,
+                                     self.words_mismatch)
+        
+        phn = backend.phonemize(
             lines,
-            language=self.language,
-            backend='espeak',
             separator=self.separator,
-            strip=self.strip,
-            preserve_punctuation=self.preserve_punctuation,
-            language_switch=self.language_switch,
-            words_mismatch=self.words_mismatch,
-            with_stress=self.with_stress,
-            njobs=self.njobs)
+            strip=self.strip)
+            
         logging.disable(logging.NOTSET)
         
         return phn
